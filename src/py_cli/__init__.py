@@ -1,6 +1,11 @@
 import httpx
 import questionary
 
+GREEN = "\033[92m"
+RED = "\033[91m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
+
 
 def show_menu():
     print("What would you like to do?")
@@ -30,50 +35,54 @@ def manage_todo():
     my_todos = []
 
     while True:
-        user_choice = show_task_menu()
+        user_choice = show_task_menu().lower().strip()
 
-        match user_choice.lower():
+        match user_choice:
             case "a":
                 task = input("Todo: ")
 
                 my_todos.append({ "task": task, "pending": False })
+                print(f"{GREEN}Task added!{RESET}")
             case "vp":
-                if len(my_todos) == 0:
-                    print("No pending todo's")
-                    break
-
                 choices = [
                         {"name": f"[{idx + 1}] {todo['task']}", "value": todo}
                         for idx, todo in enumerate(my_todos)
                         if not todo["pending"]
-                        ]
+                        ] 
+
+                if len(choices) == 0:
+                    print(f"{YELLOW}No pending todo's{RESET}")
+                    break
 
                 select_to_update = questionary.select("Select an item", choices = choices).ask()
 
                 while True:
-                    print("D: delete, U: update, Q: quit / back")
+                    print("D: delete, U: update, S: toggle status, Q: quit / back")
                     user_choice = input("Select an option: ")
                     item_index = my_todos.index(select_to_update)
 
                     match user_choice.lower():
                         case "d":
                             my_todos.pop(item_index)
-                            print("Task deleted!")
+                            print(f"{RED}Task deleted!{RESET}")
                             break
                         case "u":
                             while True:
                                 new_updated_task = input("Enter updated task: ")
 
                                 if len(new_updated_task) == 0:
-                                    print("Please enter a valid value.")
+                                    print(f"{RED}Please enter a valid value.{RESET}")
                                     continue
 
                                 my_todos[item_index]['task'] = new_updated_task
-                                print("Task updated!")
+                                print(f"{YELLOW}Task updated!{RESET}")
                                 break
+                        case "s":
+                            my_todos[item_index]['pending'] = not my_todos[item_index]['pending']
+                            print(f"Status: {f"{GREEN}Done{RESET}" if my_todos[item_index]['pending'] else f"{YELLOW}Pending{RESET}"}")
+                            break
                         case "q":
                             break
-
             case "vd":
                 choices = [
                         {"name": f"[{idx + 1}] {todo['task']}", "value": todo}
@@ -81,11 +90,32 @@ def manage_todo():
                         if todo["pending"]
                         ]
 
+                if len(choices) == 0:
+                    print(f"{YELLOW}No done todo's{RESET}")
+                    break
+
                 select_to_update = questionary.select("Select an item", choices = choices).ask()
+
+                while True:
+                    print("D: delete, S: toggle status, Q: quit / back")
+                    user_choice = input("Select an option: ")
+                    item_index = my_todos.index(select_to_update)
+
+                    match user_choice.lower():
+                        case "d":
+                            my_todos.pop(item_index)
+                            print(f"{RED}Task deleted!${RESET}")
+                            break
+                        case "s":
+                            my_todos[item_index]['pending'] = not my_todos[item_index]['pending']
+                            print(f"Status: {f"{GREEN}Done{RESET}" if my_todos[item_index]['pending'] else f"{YELLOW}Pending{RESET}"}")
+                            break
+                        case "q":
+                            break
             case "q":
                 break
             case _:
-                print("Please pick a valid input.")
+                print(f"{RED}Please pick a valid input.{RESET}")
 
 
 def main():
@@ -101,6 +131,6 @@ def main():
                 print("Thank you")
                 break
             case _:
-                print("Please pick a valid input.")
+                print(f"{RED}Please pick a valid input.{RESET}")
 
 
